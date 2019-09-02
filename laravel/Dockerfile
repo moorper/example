@@ -16,14 +16,25 @@ ARG DEBIAN_SECURITY_URL=mirrors.ustc.edu.cn/debian-security
 ENV DEBIAN_SECURITY_URL ${DEBIAN_SECURITY_URL}
 RUN sed -i "s|security.debian.org/debian-security|$DEBIAN_SECURITY_URL|g" /etc/apt/sources.list
 
-# 安装软件 cron
+ENV LANG C.UTF-8
+
+# 安装软件
 RUN set -eux \
-        && apt-get update \
-        && apt-get install -y --no-install-recommends cron \
-        && apt-get autoremove \
-        && apt-get autoclean \
-        && apt-get clean \
-        && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && apt-get update \
+    && apt-get install -y --no-install-recommends cron wget unzip fontconfig \
+        libfontenc1 libjpeg62-turbo libx11-6 libx11-data libxau6 libxcb1 \
+        libxdmcp6 libxext6 libxfont1 libxrender1 x11-common xfonts-75dpi \
+        xfonts-base xfonts-encodings xfonts-utils
+
+WORKDIR /tmp
+
+# 安装 Noto Sans SC 字体
+RUN wget https://fonts.google.com/download?family=Noto%20Sans%20SC -O Noto_Sans_SC.zip \
+    && unzip Noto_Sans_SC.zip -d /usr/share/fonts \
+    && fc-cache 
+# 安装 wkhtmltopdf
+RUN wget https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb -O wkhtmltox_0.12.5-1.stretch_amd64.deb \
+    && dpkg -i wkhtmltox_0.12.5-1.stretch_amd64.deb 
         
 # 安装拓展
 ENV PHP_EXTENSION \
@@ -34,9 +45,16 @@ ENV PECL_EXTENSION \
 RUN docker-php-ext-install $PHP_EXTENSION \
     && pecl install $PECL_EXTENSION \
     && docker-php-ext-enable $PECL_EXTENSION \
-                             opcache \
+        opcache \
     && a2enmod rewrite
     
+# 清理无用的依赖包
+RUN set -eux \
+    && apt-get autoremove \
+    && apt-get autoclean \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # 访问端口
 EXPOSE 80
 
