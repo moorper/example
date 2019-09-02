@@ -1,2 +1,1 @@
-# example
-A simple Example.
+# examples

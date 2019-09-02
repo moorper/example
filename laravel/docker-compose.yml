@@ -1,0 +1,26 @@
+version: "3.4"
+
+services:
+  api:
+    build: .
+    image: example-laravel
+    networks:
+      - frontend
+      - backend
+    environment:
+      - APP_ENV=development
+    ports:
+      - "80:80"
+    entrypoint: ./docker-entrypoint.sh
+  queue:
+    build: .
+    image: example-laravel
+    networks:
+      - backend
+    environment:
+      - APP_ENV=development
+    entrypoint: ./docker-entrypoint-queue.sh
+    
+networks:
+  frontend:
+  backend:
